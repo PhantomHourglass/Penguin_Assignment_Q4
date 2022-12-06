@@ -1,0 +1,102 @@
+---
+title: "Penguin Assignment Q4"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I have performed a t-test to determine whether the mean bodymass of
+gentoo and chinstrap penguins differ significantly from each other and
+have produced an overlapping histogram of this data to visually
+illustrate this test. My work is presented below in three overall steps:
+loading and cleaning the data; performing the t test; and producing and
+exporting the plot.
+
+#### Loading and cleaning the data
+
+```{r}
+setwd("~/Documents/Year 3/penguin_assessment_Q4") #must be altered to individual's machine
+
+source("functions/libraries.R") #loading in required libraries
+source("functions/functions.R") #loading in functions
+source("functions/plotting.R") #loading in functions related to plotting
+
+write.csv(penguins_raw, "data_raw/penguins_raw.csv") #preserving a read only version of the raw data
+
+penguin_data_clean <- data_cleaning(penguins_raw) #cleaning data
+write.csv(penguin_data_clean, "data_clean/penguin_data_clean.csv") #preserving copy of clean data
+
+removed_empty_bodymass <- remove_empty_bodymass(penguin_data_clean) #remove N/A bodymass values
+
+gentoo_and_chinstrap <- remove_adelie(removed_empty_bodymass) #removing adelie species from dataset
+```
+
+#### Performing the T-test
+
+In order to determine what type of T-test should be used one must first
+establish whether the data has a normal distribution and whether the two
+data sets have equal variance or not.
+
+Shapiro-Wilk test for normality of gentoo data:
+
+H0: data is normal H1: data is not normal Significance level = 0.05
+
+```{r}
+#shapiro-wilk test to test normality of gentoo bodymass data
+shapiro_wilk_gentoo <- with(gentoo_and_chinstrap, shapiro.test(body_mass_g[species == "Gentoo penguin (Pygoscelis papua)"]))
+shapiro_wilk_gentoo
+```
+
+p = 0.2336, 0.2336 \> 0.05 therefore accept H0. Data is normal
+
+Shapiro-Wilk test for normality of chinstrap data:
+
+H0: data is normal H1: data is not normal Significance level = 0.05
+
+```{r}
+shapiro_wilk_chinstrap <- with(gentoo_and_chinstrap, shapiro.test(body_mass_g[species == "Chinstrap penguin (Pygoscelis antarctica)"])) 
+shapiro_wilk_chinstrap 
+```
+
+p = 0.5605, 0.5605 \> 0.05 therefore accept H0 Data is normal
+
+Test whether variance is unequal:
+
+H0: variance is equal H1: variance is unequal Significance level = 0.05
+
+```{r}
+var.test(body_mass_g ~ species, data = gentoo_and_chinstrap) 
+```
+
+p = 0.01559, 0.01559 \< 0.05 therefore reject H0. Variance is not equal
+
+Therefore we cannot use student T test. Welch's t test will be used:
+
+H0: mean bodymass of gentoo and chinstrap penguins are equal H1: mean
+bodymass of gentoo and chinstrap penguins are not equal Significance
+level = 0.05
+
+```{r}
+welch_t_test <- t.test(body_mass_g ~ species, data = gentoo_and_chinstrap, var.equal = FALSE)
+welch_t_test
+```
+
+p = 2.2e-16, 2.2e-16 \< 0.05 therefore reject H0. Mean bodymass of
+gentoo and chinstrap penguins are not equal.
+
+### Producing and exporting the plot
+
+```{r}
+plot_bodymass_figure(gentoo_and_chinstrap) #plotting figure
+
+save_bodymass_plot_png(gentoo_and_chinstrap) #exporting figure as pdf
+
+save_bodymass_plot_svg(gentoo_and_chinstrap) #exporting figure as svg
+```
+
+NB: Please view functions.R and plotting.R files for code used to produce cleaning and plotting functions.
