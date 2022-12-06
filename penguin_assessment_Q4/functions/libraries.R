@@ -1,0 +1,8 @@
+library(palmerpenguins)
+library(ggplot2)
+library(janitor)
+library(plyr)
+library(dplyr)
+library(robumeta)
+library(ragg)
+library(svglite)
